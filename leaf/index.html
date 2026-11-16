@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>تركيب الورقة – نموذج ثلاثي الأبعاد بالواقع المعزز</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script type="module" src="model-viewer.min.js"></script>
+<style>
+  :root{
+    --bg:#f3f7ee; --ink:#17301c; --muted:#5d7262; --card:#ffffff; --line:#dfe8d8;
+    --brand:#2e7d32; --brand2:#1b5e20; --accent:#f0912a; --sky:#2d6fd8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Tajawal",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+  .app{display:flex;flex-direction:column;height:100%;max-width:1100px;margin:0 auto}
+  header{padding:14px 16px 8px;display:flex;align-items:center;gap:12px}
+  .badge{background:var(--brand);color:#fff;border-radius:12px;padding:6px 10px;font-weight:800;font-size:13px;white-space:nowrap}
+  header h1{margin:0;font-size:clamp(18px,4.6vw,26px);font-weight:800;line-height:1.2}
+  header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .stage{position:relative;flex:1;min-height:340px;margin:0 12px;border-radius:22px;overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 20%,#ffffff 0%,#eef5e6 55%,#dde9d2 100%);box-shadow:0 10px 30px rgba(30,70,30,.12),inset 0 0 0 1px var(--line)}
+  model-viewer{width:100%;height:100%;--poster-color:transparent;--progress-bar-color:var(--brand)}
+  /* hotspots */
+  .hs{position:relative;width:16px;height:16px;border:0;background:none;padding:0;cursor:pointer;transform:translate(-50%,-50%);transition:opacity .25s}
+  .hs .dot{position:absolute;inset:2px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px #fff,0 2px 6px rgba(0,0,0,.35)}
+  .hs .lbl{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.96);color:var(--ink);font:700 12.5px/1 "Tajawal",sans-serif;padding:6px 9px;border-radius:999px;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);white-space:nowrap;direction:rtl;unicode-bidi:isolate}
+  .hs[data-side=R] .lbl{left:22px;border-left:4px solid var(--c)}
+  .hs[data-side=L] .lbl{right:22px;border-right:4px solid var(--c)}
+  .hs .lbl::before{content:"";position:absolute;top:50%;width:8px;height:2px;background:var(--c)}
+  .hs[data-side=R] .lbl::before{left:-12px} .hs[data-side=L] .lbl::before{right:-12px}
+  .hs:not([data-visible]){opacity:0;pointer-events:none}
+  .hide-labels .hs{opacity:0!important;pointer-events:none}
+  .hs.active .lbl{background:var(--c);color:#fff}
+  /* floating */
+  .hint{position:absolute;top:12px;inset-inline:12px;display:flex;justify-content:center;pointer-events:none}
+  .hint span{background:rgba(23,48,28,.82);color:#fff;font-size:13px;padding:7px 12px;border-radius:999px;transition:opacity .4s}
+  .ar-btn{position:absolute;bottom:14px;right:14px;border:0;border-radius:16px;background:var(--brand2);color:#fff;
+    font:800 15px "Tajawal",sans-serif;padding:12px 16px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(27,94,32,.4);cursor:pointer}
+  .ar-btn svg{width:22px;height:22px}
+  .ar-note{position:absolute;bottom:12px;inset-inline-start:12px;max-width:250px;background:rgba(255,255,255,.92);border-radius:12px;padding:7px 10px;font-size:11.5px;transition:opacity .6s;color:var(--muted);box-shadow:0 4px 14px rgba(0,0,0,.12);display:none}
+  /* controls */
+  .controls{padding:12px 14px 6px;display:grid;gap:10px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .slider{flex:1;min-width:220px;background:var(--card);border-radius:16px;padding:10px 14px;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:12px}
+  .slider b{font-size:14px;white-space:nowrap}
+  .slider small{color:var(--muted);font-size:12px;white-space:nowrap}
+  input[type=range]{flex:1;accent-color:var(--brand);height:28px}
+  .btn{border:0;border-radius:14px;padding:11px 14px;font:700 14px "Tajawal",sans-serif;cursor:pointer;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .btn.on{background:#e3f1cf;box-shadow:inset 0 0 0 2px var(--brand)}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:none}
+  /* legend */
+  .legend{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line);border:0;font-family:inherit;color:var(--ink)}
+  .chip i{width:11px;height:11px;border-radius:50%;background:var(--c)}
+  .chip.active{box-shadow:inset 0 0 0 2px var(--c)}
+  /* info sheet */
+  .sheet{position:absolute;inset-inline:12px;bottom:12px;background:#fff;border-radius:20px;padding:14px 16px 16px;box-shadow:0 12px 34px rgba(0,0,0,.22);
+    transform:translateY(130%);transition:transform .35s cubic-bezier(.2,.8,.2,1);border-top:6px solid var(--c,#2e7d32);max-width:520px;margin-inline-start:auto}
+  .sheet.show{transform:none}
+  .sheet h3{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+  .sheet h3 em{font-style:normal;font-size:12px;color:var(--muted);font-weight:500;direction:ltr}
+  .sheet p{margin:0;font-size:15px;line-height:1.75;color:#2b3f2f}
+  .sheet .x{position:absolute;top:10px;inset-inline-end:10px;border:0;background:#f1f4ee;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer}
+  /* quiz */
+  .quiz{position:absolute;top:12px;inset-inline:12px;background:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 10px 26px rgba(0,0,0,.18);display:none;max-width:560px;margin:0 auto}
+  .quiz.show{display:block}
+  .quiz .q{font-weight:800;font-size:16px;line-height:1.6}
+  .quiz .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-bottom:4px}
+  .quiz .fb{margin-top:6px;font-weight:700;font-size:14px;min-height:20px}
+  .quiz .fb.ok{color:var(--brand)} .quiz .fb.no{color:#c0392b}
+  footer{padding:4px 16px 14px;color:var(--muted);font-size:11.5px;text-align:center}
+  @media (max-width:560px){
+    .hs .lbl{font-size:10.5px;padding:4px 6px} .stage{margin:0 8px;flex:none;height:58vh;min-height:360px} .controls{padding:10px 8px 4px}
+    .slider{flex-basis:100%} .row .btn{flex:1}
+    .legend{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none} .chip{flex:none}
+    header{padding:10px 12px 6px} header p{font-size:12px}
+    .app{height:auto;min-height:100%}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="badge">الفصل ٩ · الدرس ٢</span>
+    <div>
+      <h1>تركيب الورقة من الداخل</h1>
+      <p>نموذج ثلاثي الأبعاد واقعي لمقطع في ورقة نبات · النباتات البذرية</p>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <model-viewer dir="ltr" id="mv" src="leaf.glb" alt="مقطع ثلاثي الأبعاد في ورقة نبات"
+      camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="2500" rotation-per-second="14deg"
+      camera-orbit="-28deg 68deg auto" min-camera-orbit="auto 0deg auto" max-camera-orbit="auto 180deg 220%"
+      interaction-prompt="none" shadow-intensity="1.1" shadow-softness="0.8" exposure="1.05" environment-image="neutral" tone-mapping="neutral"
+      ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" ar-placement="floor" xr-environment>
+      <button slot="ar-button" class="ar-btn" id="arBtn" aria-label="عرض في الواقع المعزز">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+        شاهديها على طاولتك
+      </button>
+    </model-viewer>
+    <div class="hint"><span id="hint">اسحبي لتدوير النموذج · قرّبي بإصبعين · اضغطي على أي جزء</span></div>
+    <div class="ar-note" id="arNote">لتجربة الواقع المعزز: افتحي الرابط المباشر أو امسحي رمز QR بالجوال.</div>
+
+    <div class="quiz" id="quiz">
+      <div class="meta"><span id="qNum"></span><span id="qScore"></span></div>
+      <div class="q" id="qText"></div>
+      <div class="fb" id="qFb"></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="qSkip">التالي</button><button class="btn" id="qEnd">إنهاء التحدي</button></div>
+    </div>
+
+    <div class="sheet" id="sheet" role="dialog" aria-live="polite">
+      <button class="x" id="sheetX" aria-label="إغلاق">✕</button>
+      <h3><span id="sTitle"></span><em id="sEn"></em></h3>
+      <p id="sText"></p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="slider">
+        <b>فكّ الطبقات</b>
+        <small>مجمّعة</small>
+        <input type="range" id="explode" min="0" max="100" value="0" aria-label="فك الطبقات">
+        <small>مفكّكة</small>
+      </div>
+      <button class="btn on" id="lblBtn">الأسماء</button>
+      <button class="btn" id="playBtn">▶ حركة</button>
+      <button class="btn" id="palBtn">🎨 ألوان الكتاب</button>
+      <button class="btn primary" id="quizBtn">تحدٍّ: أين هو؟</button>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <footer>المحتوى العلمي مطابق لكتاب العلوم – الفصل التاسع «النباتات»، الدرس الثاني «النباتات البذرية» (تركيب الورقة والأنسجة الوعائية).</footer>
+</div>
+
+<script type="module">
+const HOT = {"hot": [{"id": "cuticle", "n": [0, 1, 0], "side": "L", "base": [-0.16, 0.2475, -0.08], "off": [0, 0.215, 0]}, {"id": "epi_up", "n": [0, 0, 1], "side": "R", "base": [0.165, 0.22825, 0.125], "off": [0, 0.175, 0]}, {"id": "palisade", "n": [-1, 0, 0], "side": "L", "base": [-0.1975, 0.18375, 0.08], "off": [0, 0.13, 0]}, {"id": "chloroplast", "n": [0, 0, 1], "side": "R", "base": [0.1275, 0.15625, 0.11], "off": [0, 0.13, 0]}, {"id": "spongy", "n": [0, 0, 1], "side": "L", "base": [-0.125, 0.0525, 0.11], "off": [0, 0.08, 0]}, {"id": "xylem", "n": [0, 0, 1], "side": "L", "base": [0.035, 0.087, 0.125], "off": [0, 0.08, 0.17]}, {"id": "phloem", "n": [0, 0, 1], "side": "R", "base": [0.059, 0.061, 0.125], "off": [0, 0.08, 0.17]}, {"id": "vein", "n": [0, 0, 1], "side": "R", "base": [0.0675, 0.1035, 0.12], "off": [0, 0.08, 0.17]}, {"id": "epi_low", "n": [0, 0, 1], "side": "R", "base": [0.185, 0.0095, 0.125], "off": [0, 0.035, 0]}, {"id": "stoma", "n": [0, -1, 0], "side": "L", "base": [-0.07, -0.001, 0.06], "off": [0, 0.035, 0]}, {"id": "guard", "n": [0, -1, 0], "side": "R", "base": [0.129, -0.002, 0.0557], "off": [0, 0.035, 0]}], "explodeEnd": 1.6};
+const PARTS = {
+  cuticle:    {t:'الكيوتيكل', en:'Cuticle', c:'#d8c93a', cr:'#c9b94f', d:'طبقة شمعية رقيقة شفافة تغلّف البشرة في أوراق بعض النباتات، وتقلّل من تبخّر الماء من الورقة.'},
+  epi_up:     {t:'البشرة العليا', en:'Upper epidermis', c:'#9ab884', cr:'#9fb58a', d:'طبقة رقيقة من الخلايا تغطي السطح العلوي للورقة وتحميها، وخلاياها شفافة تقريبًا تسمح بمرور الضوء إلى الداخل.'},
+  palisade:   {t:'الطبقة العمادية', en:'Palisade layer', c:'#3fa34d', cr:'#5fa841', d:'خلايا طويلة رفيعة متراصّة تقع تحت البشرة العليا مباشرة، تحتوي على أعداد كبيرة من البلاستيدات الخضراء، ويُصنع فيها معظم غذاء النبات.'},
+  chloroplast:{t:'البلاستيدات الخضراء', en:'Chloroplasts', c:'#145a24', cr:'#2f7d22', d:'عضيّات خضراء داخل الخلايا تتم فيها عملية البناء الضوئي (صنع الغذاء)، وتكثر في الطبقة العمادية لأنها الأقرب إلى ضوء الشمس.'},
+  spongy:     {t:'الطبقة الإسفنجية', en:'Spongy layer', c:'#8dbf47', cr:'#8fc062', d:'طبقة من الخلايا الموزّعة عشوائيًا بين الطبقة العمادية والبشرة السفلى، تفصل بينها فراغات هوائية تتحرك فيها الغازات داخل الورقة.'},
+  vein:       {s:'العِرْق', t:'العِرْق (الحزمة الوعائية)', en:'Vein', c:'#a9c97d', cr:'#a9c98a', d:'يتكوّن العرق من الأنسجة الوعائية (الخشب واللحاء)، ويوجد في الطبقة الإسفنجية، ويحيط به غلاف من الخلايا.'},
+  xylem:      {t:'الخشب', en:'Xylem', c:'#2d6fd8', cr:'#b08a4c', d:'خلايا أنبوبية مجوّفة مرتّبة بعضها فوق بعض تُشكّل أوعية تنقل الماء والمواد الذائبة من الجذور إلى أجزاء النبات، وجدرانها السميكة تدعم النبات.'},
+  phloem:     {t:'اللحاء', en:'Phloem', c:'#f0912a', cr:'#bcc373', d:'خلايا أنبوبية مرتّبة بعضها فوق بعض تُشكّل أنابيب تنقل الغذاء (السكر) من الأوراق حيث يُصنع إلى باقي أجزاء النبات.'},
+  epi_low:    {t:'البشرة السفلى', en:'Lower epidermis', c:'#9ab884', cr:'#9fb58a', d:'طبقة رقيقة من الخلايا تغطي السطح السفلي للورقة وتحميها، وتنتشر فيها الثغور.'},
+  stoma:      {t:'الثغر', en:'Stoma', c:'#3b3b3b', cr:'#3b3b3b', d:'فتحة صغيرة في البشرة تسمح لثاني أكسيد الكربون والماء والأكسجين بالدخول إلى النبات والخروج منه.'},
+  nucleus:    {t:'النواة', en:'Nucleus', c:'#6c4f9c', cr:'#8f82a3', d:'تراكيب داخل كل خلية حيّة من خلايا الورقة، وهي مركز التحكم في أنشطة الخلية.'},
+  guard:      {t:'الخليتان الحارستان', en:'Guard cells', c:'#2f8c3a', cr:'#5ea545', d:'خليتان تحيطان بكل ثغر وتتحكّمان في فتحه وإغلاقه، وهما الخليتان الوحيدتان في البشرة اللتان تحتويان على بلاستيدات خضراء.'},
+};
+const MAT2PART = {nucleus:'nucleus', cuticle:'cuticle', palisade:'palisade', chloroplast:'chloroplast', spongy:'spongy', bundle_sheath:'vein', xylem:'xylem', phloem:'phloem', guard_cells:'guard'};
+const QUIZ = [
+  {q:'اضغطي على الطبقة التي يُصنع فيها معظم غذاء النبات.', a:['palisade','chloroplast']},
+  {q:'أين الأوعية التي تنقل الماء من الجذور إلى الورقة؟', a:['xylem']},
+  {q:'اضغطي على الخلايا التي تتحكم في فتح الثغر وإغلاقه. (لفّي النموذج لترَي أسفل الورقة)', a:['guard']},
+  {q:'أي طبقة خلاياها موزّعة عشوائيًا وبينها فراغات هوائية؟', a:['spongy']},
+  {q:'اضغطي على النسيج الذي ينقل السكر من الورقة إلى باقي النبات.', a:['phloem']},
+  {q:'اضغطي على الطبقة الشمعية التي تقلّل تبخر الماء.', a:['cuticle']},
+];
+
+const mv = document.getElementById('mv');
+const stage = document.getElementById('stage');
+const sheet = document.getElementById('sheet');
+let explodeT = 0, playing = false, quizIdx = -1, score = 0, active = null;
+
+// legend + hotspots
+const legend = document.getElementById('legend');
+for (const h of HOT.hot) {
+  const p = PARTS[h.id];
+  const b = document.createElement('button');
+  b.className = 'hs'; b.slot = 'hotspot-' + h.id; b.dataset.id = h.id; b.style.setProperty('--c', p.cr);
+  b.dataset.position = h.base.map(v => v + 'm').join(' ');
+  b.dataset.visibilityAttribute = 'visible'; b.dataset.normal = h.n.join('m ') + 'm'; b.dataset.side = h.side;
+  b.innerHTML = `<span class="dot"></span><span class="lbl" dir="rtl">${p.s || p.t}</span>`;
+  b.addEventListener('click', e => { e.stopPropagation(); pick(h.id); });
+  mv.appendChild(b);
+  const ch = document.createElement('button');
+  ch.className = 'chip'; ch.dataset.id = h.id; ch.style.setProperty('--c', p.cr);
+  ch.innerHTML = `<i></i>${p.t}`; ch.onclick = () => pick(h.id);
+  legend.appendChild(ch);
+}
+
+function setExplode(t) {
+  explodeT = t;
+  for (const h of HOT.hot) {
+    const pos = h.base.map((v, i) => (v + h.off[i] * ease(t)).toFixed(4) + 'm').join(' ');
+    mv.updateHotspot({name: 'hotspot-' + h.id, position: pos});
+  }
+  if (mv.availableAnimations?.length) { mv.pause(); mv.currentTime = t * HOT.explodeEnd; }
+  if (baseTarget) {
+    const e = ease(t);
+    mv.cameraTarget = `${baseTarget.x}m ${(baseTarget.y + 0.1 * e).toFixed(4)}m ${(baseTarget.z + 0.04 * e).toFixed(4)}m`;
+    const o = mv.getCameraOrbit();
+    const r = userR * (1 + 0.42 * e);
+    mv.cameraOrbit = `${o.theta}rad ${o.phi}rad ${r}m`;
+  }
+}
+let baseTarget = null, userR = null, lastE = 0;
+mv.addEventListener('camera-change', e => {
+  if (e.detail.source === 'user-interaction' && baseTarget) userR = mv.getCameraOrbit().radius / (1 + 0.42 * ease(explodeT));
+});
+const ease = t => t * t * (3 - 2 * t);
+
+// highlight via emissive
+let mats = {}, realCol = {}, edu = false;
+const EDU = {cuticle:'#f4ef9c', epidermis:'#e3f1cf', palisade:'#3fa34d', chloroplast:'#145a24', nucleus:'#6c4f9c', spongy:'#9fcf5a', bundle_sheath:'#cfe6a8', xylem:'#2d6fd8', phloem:'#f0912a', guard_cells:'#2f8c3a'};
+const lin = h => [1,3,5].map(i => { const c = parseInt(h.substr(i,2),16)/255; return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); });
+function applyPalette() {
+  for (const [name, m] of Object.entries(mats)) {
+    const base = realCol[name]; if (!base) continue;
+    m.pbrMetallicRoughness.setBaseColorFactor(edu && EDU[name] ? [...lin(EDU[name]), base[3]] : base);
+  }
+  document.querySelectorAll('.hs,.chip').forEach(el => { const p = PARTS[el.dataset.id]; el.style.setProperty('--c', edu ? p.c : p.cr); });
+  palBtn.textContent = edu ? '🎨 ألوان واقعية' : '🎨 ألوان الكتاب';
+  palBtn.classList.toggle('on', edu);
+}
+const palBtn = document.getElementById('palBtn');
+palBtn.onclick = () => { edu = !edu; applyPalette(); if (active) pick(active); };
+mv.addEventListener('load', () => {
+  mats = {};
+  for (const m of mv.model.materials) { mats[m.name] = m; realCol[m.name] = [...m.pbrMetallicRoughness.baseColorFactor]; }
+  mv.animationName = 'explode';
+  mv.play(); mv.pause(); mv.currentTime = 0;
+  const tg = mv.getCameraTarget(); baseTarget = {x: tg.x, y: tg.y, z: tg.z};
+  userR = mv.getCameraOrbit().radius * (mv.clientWidth < 600 ? 1.38 : 1.08);
+  setExplode(0);
+  setTimeout(() => { const n = document.getElementById('arNote'); n.style.opacity = 0; }, 9000);
+  if (!mv.canActivateAR) document.getElementById('arNote').style.display = 'block';
+});
+function highlight(id) {
+  for (const [name, m] of Object.entries(mats)) {
+    const part = MAT2PART[name] ?? (name === 'epidermis' ? 'epi' : null);
+    const on = id && (part === id || (part === 'epi' && (id === 'epi_up' || id === 'epi_low')) || (id === 'stoma' && name === 'guard_cells'));
+    m.setEmissiveFactor(on ? [0.28, 0.24, 0.05] : [0, 0, 0]);
+  }
+}
+function pick(id, fromQuiz) {
+  if (quizIdx >= 0 && !fromQuiz) return answer(id);
+  active = id; const p = PARTS[id];
+  sheet.style.setProperty('--c', edu ? p.c : p.cr);
+  document.getElementById('sTitle').textContent = p.t;
+  document.getElementById('sEn').textContent = p.en;
+  document.getElementById('sText').textContent = p.d;
+  sheet.classList.add('show');
+  document.querySelectorAll('.hs,.chip').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+  highlight(id);
+  mv.autoRotate = false;
+}
+function closeSheet() { sheet.classList.remove('show'); active = null; highlight(null); document.querySelectorAll('.hs,.chip').forEach(el => el.classList.remove('active')); }
+document.getElementById('sheetX').onclick = closeSheet;
+
+// tap on the model surface
+mv.addEventListener('click', e => {
+  const r = mv.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  const m = mv.materialFromPoint(x, y);
+  if (!m) { if (quizIdx < 0) closeSheet(); return; }
+  let id = MAT2PART[m.name];
+  if (m.name === 'epidermis') {
+    const hit = mv.positionAndNormalFromPoint(x, y);
+    const mid = 0.05 * 2.47 + (HOT.hot.find(h => h.id === 'spongy').off[1]) * ease(explodeT);
+    id = hit && hit.position.y > mid ? 'epi_up' : 'epi_low';
+  }
+  if (id) pick(id);
+});
+
+// explode slider
+const sl = document.getElementById('explode');
+sl.addEventListener('input', () => { stopPlay(); setExplode(sl.value / 100); mv.autoRotate = false; });
+
+// play loop
+const playBtn = document.getElementById('playBtn');
+function stopPlay() { if (playing) { playing = false; playBtn.textContent = '▶ حركة'; playBtn.classList.remove('on'); } }
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  playing = true; playBtn.textContent = '⏸ إيقاف'; playBtn.classList.add('on');
+  const t0 = performance.now(), start = explodeT;
+  const step = now => {
+    if (!playing) return;
+    const ph = ((now - t0) / 1000 + start * 1.6) % 6.4; // out 1.6, hold 1.6, in 1.6, rest 1.6
+    const t = ph < 1.6 ? ph / 1.6 : ph < 3.2 ? 1 : ph < 4.8 ? 1 - (ph - 3.2) / 1.6 : 0;
+    setExplode(t); sl.value = Math.round(t * 100);
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+};
+
+// labels toggle
+const lblBtn = document.getElementById('lblBtn');
+lblBtn.onclick = () => { const off = stage.classList.toggle('hide-labels'); lblBtn.classList.toggle('on', !off); };
+
+// quiz
+const quiz = document.getElementById('quiz');
+function showQ() {
+  const q = QUIZ[quizIdx];
+  document.getElementById('qNum').textContent = `السؤال ${quizIdx + 1} من ${QUIZ.length}`;
+  document.getElementById('qScore').textContent = `النقاط: ${score}`;
+  document.getElementById('qText').textContent = q.q;
+  const fb = document.getElementById('qFb'); fb.textContent = ''; fb.className = 'fb';
+}
+function startQuiz() {
+  quizIdx = 0; score = 0; closeSheet(); stage.classList.add('hide-labels'); lblBtn.classList.remove('on');
+  quiz.classList.add('show'); showQ(); document.getElementById('hint').style.opacity = 0;
+  sl.value = 35; setExplode(.35);
+}
+function endQuiz(done) {
+  if (done) { document.getElementById('qText').textContent = `أحسنتِ! النتيجة النهائية: ${score} من ${QUIZ.length}`; document.getElementById('qFb').textContent=''; quizIdx = -1; setTimeout(() => quiz.classList.remove('show'), 2600); }
+  else { quizIdx = -1; quiz.classList.remove('show'); }
+  stage.classList.remove('hide-labels'); lblBtn.classList.add('on');
+}
+function next() { quizIdx++; if (quizIdx >= QUIZ.length) { endQuiz(true); } else showQ(); }
+let locked = false;
+function answer(id) {
+  if (locked) return;
+  const q = QUIZ[quizIdx], fb = document.getElementById('qFb');
+  if (q.a.includes(id)) {
+    score++; fb.textContent = `✔ صحيح: ${PARTS[id].t}`; fb.className = 'fb ok'; highlight(id); locked = true;
+    document.getElementById('qScore').textContent = `النقاط: ${score}`;
+    setTimeout(() => { locked = false; highlight(null); next(); }, 1300);
+  } else { fb.textContent = `✘ هذا الجزء هو «${PARTS[id].t}» — حاولي مرة أخرى`; fb.className = 'fb no'; }
+}
+document.getElementById('quizBtn').onclick = startQuiz;
+document.getElementById('qSkip').onclick = () => { locked = false; highlight(null); next(); };
+document.getElementById('qEnd').onclick = () => endQuiz(false);
+
+// fade hint
+mv.addEventListener('camera-change', e => { if (e.detail.source === 'user-interaction') document.getElementById('hint').style.opacity = 0; }, {once:false});
+</script>
+</body>
+</html>
